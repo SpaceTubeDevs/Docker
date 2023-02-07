@@ -1,0 +1,64 @@
+version: "3"
+services:
+  sftp:
+    image: atmoz/sftp
+    volumes:
+        # - ./users.conf:/etc/sftp/users.conf
+        - ./website:/home/jade/devs
+        - ./users/jade:/home/jade/home
+
+        - ./website:/home/alex/devs
+        - ./users/alex:/home/alex/home
+
+        - ./website:/home/antoine/devs
+        - ./users/antoine:/home/antoine/home
+    ports:
+        - "2222:22"
+    command:
+      - jade:jade:1001
+      - alex:alex:1002
+      - antoine:antoine:1003
+    networks:
+      - webgateway
+
+  apache:
+    ports:
+    - '80:80'
+    depends_on:
+      - db
+    build: 
+      dockerfile: ./build/php/Dockerfile
+    volumes:
+      - ./website/:/var/www/html
+    networks:
+      - webgateway
+
+  db:
+    image: mariadb
+    restart: always
+    # environment:
+      # MARIADB_ROOT_PASSWORD: antoine
+      # MYSQL_USER:  antoine 
+      # MYSQL_PASSWORD: antoine
+    volumes:
+      - mariadb:/var/lib/mysql/
+    networks:
+      - webgateway
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+    networks:
+      - webgateway
+
+networks:
+  webgateway:
+    driver: bridge
+
+volumes:
+  mariadb:
